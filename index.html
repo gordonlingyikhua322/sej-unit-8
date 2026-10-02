@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Sejarah SPM / PT3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .kahoot-red { background-color: #e21b3c; }
+        .kahoot-blue { background-color: #1368ce; }
+        .kahoot-yellow { background-color: #d89e00; }
+        .kahoot-green { background-color: #26890c; }
+        
+        .kahoot-red:hover { background-color: #c0132f; }
+        .kahoot-blue:hover { background-color: #0f52a5; }
+        .kahoot-yellow:hover { background-color: #b08100; }
+        .kahoot-green:hover { background-color: #1e6d09; }
+
+        .animate-bounce-short {
+            animation: bounce 0.6s ease infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-indigo-950 min-h-screen text-white flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="p-4 bg-indigo-900 flex justify-between items-center shadow-lg border-b-4 border-indigo-700">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-landmark text-yellow-400 text-2xl"></i>
+            <h1 class="text-xl md:text-2xl font-bold tracking-wide">Kuiz Sejarah Interaktif</h1>
+        </div>
+        <div id="score-display" class="hidden bg-indigo-800 px-4 py-2 rounded-full border-2 border-yellow-400 text-yellow-300 font-bold">
+            Mata: <span id="current-score">0</span>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="bg-indigo-900 p-8 rounded-2xl shadow-2xl max-w-xl w-full text-center border-4 border-indigo-700">
+            <div class="text-6xl mb-4 animate-bounce-short">📜🏛️👑</div>
+            <h2 class="text-3xl font-bold mb-4 text-yellow-300">Kuiz Sejarah: Pentadbiran & Ekonomi</h2>
+            <p class="text-indigo-200 mb-6 text-lg">Uji pengetahuan anda mengenai Ekonomi Moden, Pentadbiran Negeri-Negeri Melayu, Tokoh Tempatan, serta Perlembagaan Negeri!</p>
+            <div class="bg-indigo-950/70 p-4 rounded-xl mb-6 text-left text-sm space-y-2 border border-indigo-800">
+                <p> Total Soalan: <strong>20 Soalan Pilihan Ganda</strong></p>
+                <p> Format Interaktif: Gaya Kahoot / Quizizz</p>
+            </div>
+            <button onclick="startQuiz()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-indigo-950 font-extrabold text-2xl py-4 rounded-xl shadow-lg transform transition active:scale-95">
+                MULA KUIZ! <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Question Screen -->
+        <div id="quiz-screen" class="hidden max-w-4xl w-full flex flex-col justify-between min-h-[500px]">
+            
+            <!-- Progress Bar & Question Counter -->
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="section-badge" class="bg-yellow-400 text-indigo-950 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        Bahagian A
+                    </span>
+                    <span id="question-count" class="text-indigo-200 text-sm font-semibold">Soalan 1 dari 20</span>
+                </div>
+                <div class="w-full bg-indigo-900 h-3 rounded-full overflow-hidden border border-indigo-700">
+                    <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-indigo-900 p-6 md:p-8 rounded-2xl shadow-xl border-4 border-indigo-700 mb-6 text-center flex-grow flex flex-col justify-center items-center">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold leading-relaxed text-white">
+                    Soalan akan dipaparkan di sini...
+                </h2>
+            </div>
+
+            <!-- Answer Options Section -->
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options buttons inserted dynamically -->
+            </div>
+
+            <!-- Feedback Modal -->
+            <div id="feedback-card" class="hidden fixed inset-0 bg-indigo-950/90 flex items-center justify-center p-4 z-50">
+                <div class="bg-indigo-900 p-6 rounded-2xl max-w-lg w-full text-center border-4 border-indigo-700 shadow-2xl">
+                    <div id="feedback-icon" class="text-6xl mb-3"></div>
+                    <h3 id="feedback-title" class="text-2xl font-bold mb-2"></h3>
+                    <div id="feedback-detail" class="bg-indigo-950 p-4 rounded-xl text-left mb-6 text-indigo-200 text-sm md:text-base border border-indigo-800">
+                    </div>
+                    <button onclick="nextQuestion()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-indigo-950 font-extrabold text-xl py-3 rounded-xl shadow-lg transition">
+                        Seterusnya <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- End / Result Screen -->
+        <div id="result-screen" class="hidden bg-indigo-900 p-8 rounded-2xl shadow-2xl max-w-xl w-full text-center border-4 border-indigo-700">
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 class="text-3xl font-bold mb-2 text-yellow-300">Tahniah! Kuiz Selesai!</h2>
+            <p class="text-indigo-200 mb-6">Anda telah menyelesaikan kesemua 20 soalan Sejarah.</p>
+            
+            <div class="bg-indigo-950 p-6 rounded-xl mb-6 border border-indigo-800">
+                <p class="text-sm text-indigo-300 mb-1">Skor Akhir Anda:</p>
+                <p class="text-4xl font-extrabold text-yellow-400 mb-2" id="final-score">0 / 200</p>
+                <p id="grade-feedback" class="text-sm font-semibold text-indigo-200"></p>
+            </div>
+
+            <button onclick="restartQuiz()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-indigo-950 font-extrabold text-xl py-4 rounded-xl shadow-lg transition">
+                Cuba Lagi <i class="fa-solid fa-rotate-right ml-2"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="p-3 text-center text-xs text-indigo-400 border-t border-indigo-900 bg-indigo-950">
+        Kuiz Interaktif Sejarah | Reka Bentuk Gaya Kahoot / Quizizz
+    </footer>
+
+    <script>
+        const questions = [
+            {
+                question: "1. Mengapakah ekonomi moden memperlihatkan pengeluaran dalam skala yang besar?",
+                options: [
+                    { label: "A", text: "Berorientasikan eksport", isCorrect: true },
+                    { label: "B", text: "Menjamin keperluan di pasaran", isCorrect: false },
+                    { label: "C", text: "Menggunakan tanah yang luas", isCorrect: false },
+                    { label: "D", text: "Melibatkan tenaga buruh yang ramai", isCorrect: false }
+                ],
+                explanation: "Ekonomi moden memfokuskan pengeluaran skala besar kerana ia berorientasikan eksport bagi memenuhi pasaran antarabangsa."
+            },
+            {
+                question: "2. Mengapakah SBUB memberikan tumpuan kepada penanaman tembakau di Sabah?",
+                options: [
+                    { label: "A", text: "Harga tembakau meningkat", isCorrect: true },
+                    { label: "B", text: "Mendapat pasaran baik di Eropah", isCorrect: false },
+                    { label: "C", text: "Kegiatan tradisional penduduk setempat", isCorrect: false },
+                    { label: "D", text: "Tanah Sabah sesuai untuk penanaman tembakau", isCorrect: false }
+                ],
+                explanation: "Permintaan dan harga tembakau yang tinggi di pasaran menjadi pendorong SBUB memberi tumpuan penanaman tembakau di Sabah."
+            },
+            {
+                question: "3. Apakah bahan galian yang dilombong menggunakan kaedah moden di Sarawak?",
+                options: [
+                    { label: "A", text: "Perak", isCorrect: false },
+                    { label: "B", text: "Bijih besi", isCorrect: true },
+                    { label: "C", text: "Antimoni", isCorrect: false },
+                    { label: "D", text: "Bijih timah", isCorrect: false }
+                ],
+                explanation: "Sektor galian seperti bijih besi mula dilombong menggunakan teknologi moden untuk meningkatkan produktiviti."
+            },
+            {
+                question: "4. Siapakah yang bertanggungjawab menggalakkan penduduk Tanah Melayu untuk menanam pokok getah?",
+                options: [
+                    { label: "A", text: "H.N. Ridley", isCorrect: false },
+                    { label: "B", text: "Andrew Clarke", isCorrect: false },
+                    { label: "C", text: "Frank Swettenham", isCorrect: false },
+                    { label: "D", text: "Sultan Abdul Samad", isCorrect: true }
+                ],
+                explanation: "Sultan Abdul Samad menggalakkan rakyat dan pemodal untuk terlibat aktif dalam penanaman pokok getah."
+            },
+            {
+                question: "5. Mengapakah pengeluaran bijih timah oleh pelombong Eropah berjaya mengatasi pengeluaran pelombong Cina pada tahun 1930?",
+                options: [
+                    { label: "A", text: "Harga di pasaran merosot", isCorrect: false },
+                    { label: "B", text: "Lombong pengusaha Cina ditutup", isCorrect: false },
+                    { label: "C", text: "Dasar perlindungan kerajaan British", isCorrect: true },
+                    { label: "D", text: "Pelombong Eropah menggunakan kaedah kapal korek", isCorrect: false }
+                ],
+                explanation: "Dasar perlindungan dan keutamaan pendaftaran kawasan lombong oleh British menyokong kemajuan pengusaha Eropah."
+            },
+            {
+                question: "6. Apakah tujuan Land Settlement Order 1933 dikuatkuasakan oleh kerajaan Brooke di Sarawak?",
+                options: [
+                    { label: "A", text: "Melindungi kepentingan masyarakat peribumi", isCorrect: false },
+                    { label: "B", text: "Melindungi kepentingan pelabur British", isCorrect: false },
+                    { label: "C", text: "Memudahkan urusan pentadbiran tanah", isCorrect: true },
+                    { label: "D", text: "Memelihara kepentingan keluarga Brooke", isCorrect: false }
+                ],
+                explanation: "Land Settlement Order 1933 diperkenalkan bagi menyusun semula dan memudahkan urusan pendaftaran serta pentadbiran tanah."
+            },
+            {
+                question: "7. Mengapakah British menubuhkan Jabatan Hal Ehwal Cina?",
+                options: [
+                    { label: "A", text: "Mengawal kemasukan buruh", isCorrect: false },
+                    { label: "B", text: "Membawa masuk buruh asing", isCorrect: false },
+                    { label: "C", text: "Mengelakkan eksploitasi buruh", isCorrect: true },
+                    { label: "D", text: "Memelihara kepentingan pelabur", isCorrect: false }
+                ],
+                explanation: "Jabatan Hal Ehwal Cina (Chinese Protectorate) ditubuhkan untuk melindungi dan mengelakkan eksploitasi terhadap buruh Cina."
+            },
+            {
+                question: "8. Apakah kesan peningkatan permintaan getah dalam pasaran dunia?",
+                options: [
+                    { label: "A", text: "Sistem Kontrak", isCorrect: false },
+                    { label: "B", text: "Lembaga Pesuruhjaya Mata Wang", isCorrect: true },
+                    { label: "C", text: "Ibu Pejabat Kereta Api Tanah Melayu", isCorrect: false },
+                    { label: "D", text: "Institut Penyelidikan Getah Malaya (RRIM)", isCorrect: false }
+                ],
+                explanation: "Peningkatan pesat perdagangan getah mendorong penubuhan Lembaga Pesuruhjaya Mata Wang bagi menyelaraskan transaksi ekonomi."
+            },
+            {
+                question: "9. Apakah tujuan utama kerajaan British membina landasan kereta api?",
+                options: [
+                    { label: "A", text: "Melicinkan pentadbiran", isCorrect: true },
+                    { label: "B", text: "Memudahkan eksport bahan mentah", isCorrect: false },
+                    { label: "C", text: "Menggalakkan pengangkutan awam", isCorrect: false },
+                    { label: "D", text: "Meningkatkan taraf hidup penduduk setempat", isCorrect: false }
+                ],
+                explanation: "Sistem kereta api dibina untuk melicinkan perhubungan dan urusan pentadbiran kerajaan British di seluruh negeri."
+            },
+            {
+                question: "10. Apakah usaha yang dilakukan oleh British bagi melahirkan pentadbir Melayu yang berpendidikan Inggeris?",
+                options: [
+                    { label: "A", text: "Sekolah Cina Sam Tet Ipoh", isCorrect: false },
+                    { label: "B", text: "Kolej Melayu Kuala Kangsar", isCorrect: true },
+                    { label: "C", text: "Maktab Perguruan Perempuan Melaka", isCorrect: false },
+                    { label: "D", text: "Sekolah Melayu Gelugor Pulau Pinang", isCorrect: false }
+                ],
+                explanation: "Kolej Melayu Kuala Kangsar (MCKK) ditubuhkan khas untuk memberikan pendidikan Inggeris kepada elit Melayu bagi menyertai perkhidmatan awam."
+            },
+            {
+                question: "11. Mengenai peranan Undang-Undang Tubuh Kerajaan Johor dalam memelihara kedaulatan serta identiti negeri Johor:",
+                options: [
+                    { label: "A", text: "Pelaksanaan perlembagaan bertulis", isCorrect: false },
+                    { label: "B", text: "Perlembagaan yang memihak kepada pihak British", isCorrect: false },
+                    { label: "C", text: "Amalan sistem pemerintahan raja berperlembagaan", isCorrect: true },
+                    { label: "D", text: "Larangan terhadap kemasukan warga British", isCorrect: false }
+                ],
+                explanation: "Undang-Undang Tubuh Kerajaan Johor 1895 mengamalkan sistem raja berperlembagaan bagi mengekalkan kedaulatan negeri."
+            },
+            {
+                question: "12. Berdasarkan Undang-Undang Bagi Diri Kerajaan Terengganu, aspek yang menjadi benteng penolakan campur tangan British dalam pentadbiran negeri:",
+                options: [
+                    { label: "A", text: "Kedudukan istimewa yang dimiliki oleh sultan", isCorrect: false },
+                    { label: "B", text: "Peranan Majlis Mesyuarat Negeri", isCorrect: false },
+                    { label: "C", text: "Kedudukan pegawai British dalam jentera pentadbiran", isCorrect: false },
+                    { label: "D", text: "Keutuhan hubungan antara raja dan rakyat", isCorrect: true }
+                ],
+                explanation: "Hubungan yang rapat dan utuh antara raja dan rakyat menjadi benteng ampuh menyekat pengaruh campur tangan British."
+            },
+            {
+                question: "13. Mengenai peranan yang dimainkan oleh tokoh pembesar Johor (Dato' Jaafar bin Muhammad & Dato' Abdul Rahman bin Andak):",
+                options: [
+                    { label: "A", text: "Mengukuhkan aspek ekonomi negeri", isCorrect: false },
+                    { label: "B", text: "Mengendalikan urusan pembangunan", isCorrect: true },
+                    { label: "C", text: "Memelihara kedaulatan dan kemerdekaan negeri", isCorrect: false },
+                    { label: "D", text: "Melaksanakan sistem pemerintahan berasaskan demokrasi", isCorrect: false }
+                ],
+                explanation: "Pembesar-pembesar moden Johor berperanan penting dalam mengendalikan urusan pemodenan dan pembangunan negeri."
+            },
+            {
+                question: "14. Sebab Sultan Abdul Hamid Halim Shah (1882–1943) diberikan gelaran 'Bapa Kedah Moden':",
+                options: [
+                    { label: "A", text: "Melaksanakan pelbagai projek pembangunan", isCorrect: true },
+                    { label: "B", text: "Memelihara kedaulatan negeri Kedah", isCorrect: false },
+                    { label: "C", text: "Mewujudkan perpaduan dalam kalangan rakyat", isCorrect: false },
+                    { label: "D", text: "Membangunkan sistem politik yang lebih teratur", isCorrect: false }
+                ],
+                explanation: "Baginda membina pelbagai projek infrastruktur moden seperti terusan, jalan raya, dan bangunan pentadbiran."
+            },
+            {
+                question: "15. Sektor ekonomi yang dikaitkan dengan peranan Long Jaafar dan Tengku Menteri Ngah Ibrahim:",
+                options: [
+                    { label: "A", text: "Penanaman padi", isCorrect: false },
+                    { label: "B", text: "Perusahaan getah", isCorrect: false },
+                    { label: "C", text: "Penghasilan kelapa sawit", isCorrect: false },
+                    { label: "D", text: "Perlombongan bijih timah", isCorrect: true }
+                ],
+                explanation: "Long Jaafar dan Ngah Ibrahim merupakan pelopor pembangunan kawasan perlombongan bijih timah utama di Larut, Perak."
+            },
+            {
+                question: "16. Tujuan pembinaan terusan oleh Wan Muhammad Saman:",
+                options: [
+                    { label: "A", text: "Memajukan sektor pertanian", isCorrect: true },
+                    { label: "B", text: "Membekalkan air bersih kepada penduduk", isCorrect: false },
+                    { label: "C", text: "Menyediakan kawasan rekreasi", isCorrect: false },
+                    { label: "D", text: "Memudahkan sistem pengangkutan air", isCorrect: false }
+                ],
+                explanation: "Terusan Wan Muhammad Saman dibina khas untuk mengairi kawasan sawah padi bagi memajukan sektor pertanian di Kedah."
+            },
+            {
+                question: "17. Tokoh pembesar yang mendapat gelaran 'Bapa Pendidikan Melayu Johor':",
+                options: [
+                    { label: "A", text: "Raja Chulan", isCorrect: false },
+                    { label: "B", text: "Haji Mohammad Arshad", isCorrect: false },
+                    { label: "C", text: "Dato' Abdul Rahman bin Andak", isCorrect: false },
+                    { label: "D", text: "Dato' Muhammad Ibrahim Munsyi", isCorrect: true }
+                ],
+                explanation: "Dato' Muhammad Ibrahim Munsyi giat membangunkan sekolah-sekolah Melayu dan menyusun sistem pendidikan moden di Johor."
+            },
+            {
+                question: "18. Sebab British memerlukan jalinan kerjasama dengan kalangan elit Melayu:",
+                options: [
+                    { label: "A", text: "Mengelakkan sebarang bentuk penentangan", isCorrect: false },
+                    { label: "B", text: "Mengiktiraf kedudukan golongan elit Melayu", isCorrect: false },
+                    { label: "C", text: "Mengekalkan kedudukan pentadbiran pihak British", isCorrect: true },
+                    { label: "D", text: "Mengembalikan kuasa kepada pemimpin tempatan", isCorrect: false }
+                ],
+                explanation: "Penglibatan elit Melayu dimanfaatkan oleh British untuk mengukuhkan legitimasi dan mengekalkan kedudukan pentadbiran mereka."
+            },
+            {
+                question: "19. Matlamat utama di sebalik penubuhan Perkhidmatan Tadbir Melayu (PTM):",
+                options: [
+                    { label: "A", text: "Memelihara kedaulatan dan keselamatan negara", isCorrect: false },
+                    { label: "B", text: "Menguruskan hal ehwal masyarakat Islam", isCorrect: false },
+                    { label: "C", text: "Menjadi asas pembentukan pasukan tentera", isCorrect: false },
+                    { label: "D", text: "Melatih pegawai Melayu dalam bidang pentadbiran", isCorrect: true }
+                ],
+                explanation: "PTM ditubuhkan untuk melatih pegawai Melayu dalam bidang pentadbiran awam di bawah penyeliaan pegawai British."
+            },
+            {
+                question: "20. Bukti bahawa institusi beraja dapat dipertahankan semasa era perluasan kuasa British di Negeri-negeri Melayu:",
+                options: [
+                    { label: "A", text: "Pegawai British dilantik terus oleh sultan", isCorrect: false },
+                    { label: "B", text: "Sultan tidak diwajibkan menerima nasihat British", isCorrect: false },
+                    { label: "C", text: "Penasihat British bekerja rapat dengan para pembesar", isCorrect: false },
+                    { label: "D", text: "Sebarang undang-undang memerlukan pengesahan cap mohor sultan", isCorrect: true }
+                ],
+                explanation: "Cap mohor sultan dikekalkan sebagai syarat pengesahan rasmi perundangan, menandakan kedudukan institusi beraja dipelihara."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const kahootColors = ['kahoot-red', 'kahoot-blue', 'kahoot-yellow', 'kahoot-green'];
+        const kahootShapes = ['fa-shapes', 'fa-circle', 'fa-square', 'fa-star'];
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('score-display').classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            updateScoreDisplay();
+            showQuestion();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('current-score').innerText = score;
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestionIndex];
+            
+            // Progress & Counter
+            document.getElementById('question-count').innerText = `Soalan ${currentQuestionIndex + 1} dari ${questions.length}`;
+            const progressPct = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPct}%`;
+
+            // Text
+            document.getElementById('question-text').innerText = q.question;
+
+            // Render Options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `${kahootColors[idx % 4]} text-white text-lg font-bold p-5 rounded-2xl shadow-lg flex items-center justify-start space-x-4 transition transform active:scale-95 text-left w-full`;
+                btn.innerHTML = `
+                    <span class="bg-white/20 px-3 py-2 rounded-lg font-extrabold flex items-center justify-center space-x-2">
+                        <i class="fa-solid ${kahootShapes[idx % 4]} text-lg"></i>
+                        <span>${opt.label}</span>
+                    </span>
+                    <span>${opt.text}</span>
+                `;
+                btn.onclick = () => checkAnswer(opt.isCorrect, q.explanation);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(isCorrect, explanation) {
+            if (isCorrect) {
+                score += 10;
+                updateScoreDisplay();
+                showFeedback(true, "JAWAPAN BETUL!", explanation);
+            } else {
+                const correctOpt = questions[currentQuestionIndex].options.find(o => o.isCorrect);
+                showFeedback(false, "JAWAPAN SALAH!", `Jawapan tepat ialah <strong>${correctOpt.label}: ${correctOpt.text}</strong>.<br><br>${explanation}`);
+            }
+        }
+
+        function showFeedback(isCorrect, title, detailHTML) {
+            const card = document.getElementById('feedback-card');
+            const icon = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            const detailEl = document.getElementById('feedback-detail');
+
+            if (isCorrect) {
+                icon.innerHTML = '🎉';
+                titleEl.className = 'text-2xl font-bold mb-2 text-green-400';
+            } else {
+                icon.innerHTML = '❌';
+                titleEl.className = 'text-2xl font-bold mb-2 text-red-400';
+            }
+
+            titleEl.innerText = title;
+            detailEl.innerHTML = detailHTML;
+
+            card.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback-card').classList.add('hidden');
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} / 200`;
+
+            const gradeEl = document.getElementById('grade-feedback');
+            if (score === 200) {
+                gradeEl.innerText = "Cemerlang! Anda berjaya menjawab kesemua soalan dengan tepat! 🌟";
+            } else if (score >= 140) {
+                gradeEl.innerText = "Syabas! Keputusan yang amat baik! 🎓";
+            } else if (score >= 100) {
+                gradeEl.innerText = "Boleh tahan! Boleh ulang lagi untuk tingkatkan skor anda. 📚";
+            } else {
+                gradeEl.innerText = "Jangan putus asa! Sila ulang kaji dan cuba lagi! 💪";
+            }
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-screen').classList.add('hidden');
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
